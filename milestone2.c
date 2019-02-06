@@ -62,13 +62,36 @@ void findPosition(){
 
 }
 
+void halt(){
+    motor[speedMotorR] = 0;
+    motor[speedMotorL] = 0;
+}
+
+void goStraight(){
+    motor[speedMotorR] = 50;
+    motor[speedMotorL] = 50;
+}
+
+void turnLeft(){
+    motor[turningMotor] = -50;
+        while (getMotorEncoder(turningMotor) <= -3000){
+            motor[turningMotor] = -50;
+        }
+}
+
+void turnRight(){
+    motor[turningMotor] = 50;
+        while (getMotorEncoder(turningMotor) <= 3000){
+            motor[turningMotor] = 50;
+        }
+}
+
 task main(){
     while (true){
         monitorInput();
         switch(wheelState){
             case(stop):
-                motor[speedMotorR] = 0;
-                motor[speedMotorL] = 0;
+                halt();
                 if ( button_pushed ) {
                     // If button1 pushed, change to the MOTOR_RUNNING state.
                     findPosition();
@@ -77,60 +100,35 @@ task main(){
                 }
                 break;
             case(straight):
-                motor[speedMotorR] = 50;
-                motor[speedMotorL] = 50;
+                goStraight();
                 if (getMotorEncoder(speedMotorR) >= 3000 && getMotorEncoder(speedMotorL) >= 3000){
                     wheelState = stop;
                 }
                 break;
             case(right):
-                motor[turningMotor] = 50;
-                while (getMotorEncoder(turningMotor) <= 3000){
-                    motor[turningMotor] = 50;
-                }
-                motor[speedMotorR] = 50;
-                motor[speedMotorL] = 50;
+                turnRight();
+                goStraight();
                 if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
-                    motor[speedMotorR] = 0;
-                    motor[speedMotorL] = 0;
-                    motor[turningMotor] = -50;
-                    while (getMotorEncoder(turningMotor) <= -3000){
-                        motor[turningMotor] = -50;
-                    }
+                    halt();
+                    turnLeft();
                     wheelState = straight;
                 }
                 break;
             case(left):
-                motor[turningMotor] = -50;
-                while (getMotorEncoder(turningMotor) <= -3000){
-                    motor[turningMotor] = -50;
-                }
-                motor[speedMotorR] = 50;
-                motor[speedMotorL] = 50;
+                turnLeft();
+                goStraight();
                 if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
-                    motor[speedMotorR] = 0;
-                    motor[speedMotorL] = 0;
-                    motor[turningMotor] = 50;
-                    while (getMotorEncoder(turningMotor) <= 3000){
-                        motor[turningMotor] = 50;
-                    }
+                    halt();
+                    turnRight();
                     wheelState = straight;
                 }
                 break;
             case(back):
-                motor[turningMotor] = -50;
-                while (getMotorEncoder(turningMotor) <= -3000){
-                    motor[turningMotor] = -50;
-                }
-                motor[speedMotorR] = 50;
-                motor[speedMotorL] = 50;
+                turnLeft();
+                goStraight();
                 if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
-                    motor[speedMotorR] = 0;
-                    motor[speedMotorL] = 0;
-                    motor[turningMotor] = 50;
-                    while (getMotorEncoder(turningMotor) <= 3000){
-                        motor[turningMotor] = 50;
-                    }
+                    halt();
+                    turnRight();
                     wheelState = straight;
                 }
                 break;
