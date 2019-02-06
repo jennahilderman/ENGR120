@@ -111,7 +111,7 @@ task main(){
                 if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
                     halt();
                     turnLeft();
-                    wheelState = straight;
+                    findPosition();
                 }
                 break;
             case(left):
@@ -120,7 +120,7 @@ task main(){
                 if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
                     halt();
                     turnRight();
-                    wheelState = straight;
+                    findPosition();
                 }
                 break;
             case(back):
@@ -129,7 +129,7 @@ task main(){
                 if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
                     halt();
                     turnRight();
-                    wheelState = straight;
+                    findPosition();
                 }
                 break;
 
