@@ -90,14 +90,14 @@ task main(){
                 }
                 motor[speedMotorR] = 50;
                 motor[speedMotorL] = 50;
-                if (getMotorEncoder(speedMotorR) >= 3000 && getMotorEncoder(speedMotorL) >= 3000){
+                if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
                     motor[speedMotorR] = 0;
                     motor[speedMotorL] = 0;
                     motor[turningMotor] = -50;
                     while (getMotorEncoder(turningMotor) <= -3000){
                         motor[turningMotor] = -50;
                     }
-                    wheelState = stop;
+                    wheelState = straight;
                 }
                 break;
             case(left):
@@ -107,14 +107,31 @@ task main(){
                 }
                 motor[speedMotorR] = 50;
                 motor[speedMotorL] = 50;
-                if (getMotorEncoder(speedMotorR) >= 3000 && getMotorEncoder(speedMotorL) >= 3000){
+                if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
                     motor[speedMotorR] = 0;
                     motor[speedMotorL] = 0;
                     motor[turningMotor] = 50;
                     while (getMotorEncoder(turningMotor) <= 3000){
                         motor[turningMotor] = 50;
                     }
-                    wheelState = stop;
+                    wheelState = straight;
+                }
+                break;
+            case(back):
+                motor[turningMotor] = -50;
+                while (getMotorEncoder(turningMotor) <= -3000){
+                    motor[turningMotor] = -50;
+                }
+                motor[speedMotorR] = 50;
+                motor[speedMotorL] = 50;
+                if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
+                    motor[speedMotorR] = 0;
+                    motor[speedMotorL] = 0;
+                    motor[turningMotor] = 50;
+                    while (getMotorEncoder(turningMotor) <= 3000){
+                        motor[turningMotor] = 50;
+                    }
+                    wheelState = straight;
                 }
                 break;
 
