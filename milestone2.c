@@ -15,15 +15,17 @@
 #define MILESTONE 2
 
 const   int IR_SENSOR_THRESHOLD = 1000;
-const   int rotate = 627;
+const   int rotate = 300;
 const   int meterForward = 3000;
 const   int turnForward = 627;
+const   int movingSpeed = 50;
+const   int turningSpeed = 25;
 
 
 bool straightButton_pushed;
 bool turnButton_pushed;
 
-
+// An enumeration for what direction the wheels are facing.
 enum t_wheelState {
     straight = 0,
     left,
@@ -31,6 +33,7 @@ enum t_wheelState {
     stop
 };
 
+// An enumeration for what position the robot is in.
 enum t_position {
     straight = 0,
     left,
@@ -38,11 +41,12 @@ enum t_position {
     back,
 };
 
+// Initialize the enumerations
 t_position position;
-
-
 t_wheelState wheelState;
 
+
+// Function to see if a button is pushed.
 void monitorInput(){
     if(SensorValue(straightButton) && !straightButton_pushed){
         straightButton_pushed = true;
@@ -52,6 +56,7 @@ void monitorInput(){
     }
 }
 
+// Function finds the position of the robot
 void findPosition(){
     if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
             position = straight;
@@ -73,29 +78,33 @@ void findPosition(){
 
 }
 
+// Stops the motor
 void halt(){
     motor[speedMotorR] = 0;
     motor[speedMotorL] = 0;
 }
 
+// Starts the motor
 void goStraight(){
-    motor[speedMotorR] = 50;
-    motor[speedMotorL] = 50;
+    motor[speedMotorR] = movingSpeed;
+    motor[speedMotorL] = movingSpeed;
 }
 
+// Turns the wheels to the left
 void turnLeft(){
     resetMotorEncoder(turningMotor);
-    motor[turningMotor] = -50;
+    motor[turningMotor] = -turningSpeed;
         while (getMotorEncoder(turningMotor) <= -rotate){
-            motor[turningMotor] = -50;
+            motor[turningMotor] = -turningSpeed;
         }
 }
 
+//Turns the wheels to the right
 void turnRight(){
     resetMotorEncoder(turningMotor);
-    motor[turningMotor] = 50;
+    motor[turningMotor] = turningSpeed;
         while (getMotorEncoder(turningMotor) <= rotate){
-            motor[turningMotor] = 50;
+            motor[turningMotor] = turningSpeed;
         }
 }
 
@@ -189,10 +198,10 @@ void milestone_2(){
     // Start
     wheelState = stop;
     while (true){
+        // Checks to see if a button is pushed
         monitorInput();
         switch(wheelState){
             // Start of switch
-
             case(stop):
                 // Stop the motor
                 halt();
@@ -236,7 +245,7 @@ void milestone_2(){
                     // Turn the wheels back
                     turnLeft();
                     // Switch states
-                    findPosition();
+                    wheelState = stop;
                 }
                 break;
  		}
