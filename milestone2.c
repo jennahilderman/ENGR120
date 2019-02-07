@@ -12,9 +12,23 @@
 #pragma config(Motor,  port3,           turningMotor,  tmotorVex393_MC29, openLoop, encoderPort, I2C_1)
 #pragma config(Motor,  port4,           craneMotor,    tmotorVex393_MC29, openLoop, encoderPort, I2C_1)
 
+/*
+This is the code for milestone 2
+I really suck at naming things so if you think of better ones let me know
+I also often dont do things as efficiently as possible so if you think of a better way please let me know
+I put comments to indicate wether it is relevent or not to milestone 2
+*/
+
+
+//I also made a function to find the beacon so this is so it only runs the milestone 2 part
 #define MILESTONE 2
 
+
+// This is not used in milestone 2
 const   int IR_SENSOR_THRESHOLD = 1000;
+
+// These ones are
+// We will have to test and fiddle with the values
 const   int rotate = 300;
 const   int meterForward = 3000;
 const   int turnForward = 627;
@@ -56,6 +70,7 @@ void monitorInput(){
     }
 }
 
+// You guys can ignore this function
 // Function finds the position of the robot
 void findPosition(){
     if (SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD || SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
@@ -108,6 +123,7 @@ void turnRight(){
         }
 }
 
+// Ignore all of findTheBeacon
 void findTheBeacon_1(){
     // Start
     wheelState = stop;
@@ -193,7 +209,7 @@ void findTheBeacon_1(){
     }
 }
 
-
+// This is the milestone 2 code
 void milestone_2(){
     // Start
     wheelState = stop;
