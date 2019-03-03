@@ -10,11 +10,12 @@
 
 // Part 1 is the movement part
 // Part 2 is to make the connection
-#define part 1
+#define part 2
 // Some constants
-const   int rotate = 90;
-const   int meterForward = 3000;
-const   int movingSpeed = 20;
+const   int rotate = 106;
+const   int meterForward = 800;
+const		int retreat = -50;
+const   int movingSpeed = 30;
 const		int turningSpeed = 20;
 const		int openClawSpeed = 30;
 const		int openClawDistance = 40;
@@ -36,6 +37,7 @@ enum t_claw{
 	neutral = 0,
 	open,
 	close,
+	backup,
 };
 
 // initializing a variable of each enumeration
@@ -62,11 +64,21 @@ void halt(){
 void goStraight(){
 		resetMotorEncoder(speedMotorL);
 		while(getMotorEncoder(speedMotorL) <= meterForward){
-    motor[speedMotorR] = movingSpeed;
+    motor[speedMotorR] = movingSpeed-6;
     motor[speedMotorL] = movingSpeed;
   }
   halt();
 }
+
+void goBack(){
+		resetMotorEncoder(speedMotorL);
+		while(getMotorEncoder(speedMotorL) >= retreat){
+    motor[speedMotorR] = -movingSpeed+2;
+    motor[speedMotorL] = -movingSpeed;
+  }
+  halt();
+}
+
 // A function that turns the robot to the left
 /*
 void goLeft(){
@@ -98,7 +110,7 @@ void drop(){
 	claw = neutral;
 }
 
-/* 
+/*
 Part 1 is a function that when the straight button is pushed makes the robot go straight
 and when the turn button is pushed turns the robot 90 degrees to the right.
 */
@@ -113,7 +125,7 @@ void part_1(){
 			// First case is when the robot is still
 			case(arret):
 				halt();
-				// If the straight button is pushed 
+				// If the straight button is pushed
 				if ( straightButton_pushed ) {
 					// Change to the straight case
         			motion = straight;
@@ -178,8 +190,13 @@ void part_2(){
 				// Call the drop function to open the claw
 				drop();
 				// Change to the neutral state.
-				claw = neutral;
+				claw = backup;
 				// Break out of the switch statement.
+				break;
+			case(backup):
+				motor[clawMotor] = 0;
+				goBack();
+				claw = neutral;
 				break;
 		}
 	}
