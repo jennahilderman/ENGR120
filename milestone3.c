@@ -16,13 +16,13 @@
 
 //Some important constants
 const				int retreat = -50;
-const       int rotate = 100;
+const       int rotate = 150;
 const       int movingSpeed = 30;
 const				int turningSpeed = 20;
 const				int openClawSpeed = 30;
 const				int openClawDistance = 40;
 const       int tooFar = -1;
-const       int justRight = 10;
+const       int justRight = 7;
 const				int IR_SENSOR_THRESHOLD = 830;
 const       int LIGHT_OFF = 0;
 const       int LIGHT_ON = 1;
@@ -243,10 +243,6 @@ void goStraight(){
         motor[speedMotorL] = movingSpeed;
     }
     halt();
-		if (SensorValue(batInput) < justRight && SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
-			lightLED();
-			goBack();
-		}
     if ((SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD)){
     	wait1Msec(2000);
     	connection();
@@ -333,9 +329,12 @@ task main()
               }
               if (SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
                 	lightLED();
+                	wait1Msec(2000);
+    							connection();
+    							button_pushed = false;
                 	position = started;
               }
-              if (SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
+              if (SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD){
               		while(SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD && getMotorEncoder(speedMotorL) >= -50){
               			turnLeft();
               		}
@@ -365,6 +364,7 @@ task main()
                 // Turn the wheels to the left
                 //button_pushed = false;
                 lightLED();
+                goBack();
                 goLeft();
                 findPosition();
                 break;
