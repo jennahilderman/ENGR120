@@ -22,11 +22,11 @@ const				int turningSpeed = 20;
 const				int openClawSpeed = 30;
 const				int openClawDistance = 40;
 const       int tooFar = -1;
-const       int justRight = 7;
-const				int IR_SENSOR_THRESHOLD = 500;
+const       int justRight = 10;
+const				int IR_SENSOR_THRESHOLD = 830;
 const       int LIGHT_OFF = 0;
 const       int LIGHT_ON = 1;
-const				int wallDistance = 12;
+const				int wallDistance = 35;
 
 //declaring button_pushed to be  boolean
 bool    button_pushed;
@@ -34,6 +34,7 @@ bool    button_pushed;
 // an enumeration for the position of the robot
 enum t_position {
     straight = 0,
+    found,
     left,
     right,
     wall,
@@ -65,76 +66,91 @@ void monitorInput(){
     }
 }
 
+
 // Function finds the position of the robot
-void findPosition(){
+int findPosition(){
 		// If the front right IR is less or equal to 70% of the front left IR or vice versa and both are in the IR sensor threshold then the robot should go straight
-    if (((SensorValue[infraFrontR] <= (0.7*SensorValue[infraFrontL])) || (SensorValue[infraFrontL] <= (0.7*SensorValue[infraFrontR])) && SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD && SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD)){
+    if (SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
       //Set position to straight
-    	position = straight;
-        }
+    	if (position == started){
+    		position = started;
+    	}
+    	else{
+    		position = found;
+  		}
+    return 0;
+    }
     // If the front left IR  is greater then 70% of the front right IR and the Right IR is within the IR threshhold the robot should turn right
-    if ((SensorValue[infraFrontL] >= (0.7*SensorValue[infraFrontR])) && SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD){
+    /*if ((SensorValue[infraFrontL] >= (0.7*SensorValue[infraFrontR])) && SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD){
     		// Set position to right
-        position = right;
+            if (position == started){
+    	position = started;
+    }
+    else{
+    	position = right;
+  	}
+        return 1;
     }
     // If the front right IR is greater the 70% of the front left IR and the left IR is within the IR threshold the robot should turn left.
     if ((SensorValue[infraFrontR] >= (0.7*SensorValue[infraFrontL])) && SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
         // Set the position to left
-    		position = left;
+    		    if (position == started){
+    	position = started;
     }
+    else{
+    	position = left;
+  	}
+            return 2;
+    }
+    */
     // If the back IR is within the threshold
     if (SensorValue[infraBack] < IR_SENSOR_THRESHOLD){
     		// Set the position to left
-        position = left;
+      if (position == started){
+    	position = started;
+    }
+    else{
+    	position = left;
+  	}
+        return 2;
         }
     // If none of the IR sensors are withing the IR threshold and the ultra sonic range finder shows that there is a wall in fron of it it should turn
     if (SensorValue[infraFrontR] > IR_SENSOR_THRESHOLD && SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && SensorValue[infraBack] > IR_SENSOR_THRESHOLD && SensorValue(batInput) <= wallDistance && SensorValue(batInput) != tooFar ){
         // Set the position to wall
+    	if (position == started){
+    		position = started;
+    	}
+    	else{
     		position = wall;
+  		}
+      return 3;
     }
     // Else set position to straight
-    position = straight;
+    if (position == started){
+    	position = started;
+    }
+    else{
+    	position = straight;
+  	}
+    return 4;
 }
 // a function that gives a number for each of the robots positions
-int positionNumber(){
-		// If the front right IR is less or equal to 70% of the front left IR or vice versa and both are in the IR sensor threshold then the position number is 0.
-    if ((SensorValue[infraFrontR] <= (0.7*SensorValue[infraFrontL]) || SensorValue[infraFrontL] <= (0.7*SensorValue[infraFrontR])) && SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD && SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD){
-        // return 0
-    		return 0;
-    }
-    // If the front left IR  is greater then 70% of the front right IR and the Right IR is within the IR threshhold the position number is 1
-    if ((SensorValue[infraFrontL] >= (0.7*SensorValue[infraFrontR])) && SensorValue[infraFrontR] < IR_SENSOR_THRESHOLD){
-        //return 1
-    		return 1;
-    }
-    // If none of the IR sensors are withing the IR threshold and the ultra sonic range finder shows that there is a wall in front of it set the posotion number to 2
-    if ((SensorValue[infraFrontR] >= (0.7*SensorValue[infraFrontL])) && SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
-        //return 2
-    		return 2;
-    }
-    if (SensorValue[infraBack] < IR_SENSOR_THRESHOLD){
-        return 2;
-        }
-    if (SensorValue[infraFrontR] > IR_SENSOR_THRESHOLD && SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && SensorValue[infraBack] > IR_SENSOR_THRESHOLD && SensorValue(batInput) <= wallDistance && SensorValue(batInput) != tooFar ){
-        return 3;
-    }
-    return 4;
+
+
+// A function that opens the claw
+void drop(){
+	resetMotorEncoder(clawMotor);
+	button_pushed = false;
+	while(abs(getMotorEncoder(clawMotor)) <= openClawDistance){
+		motor[clawMotor] = -openClawSpeed;
+	}
+	claw = neutral;
 }
 
 // Stopping the motor
 void halt(){
     motor[speedMotorR] = 0;
     motor[speedMotorL] = 0;
-}
-
-// Turning the motor on to go straight until it his a wall of the beacon
-void goStraight(){
-	resetMotorEncoder(speedMotorL);
-	while(SensorValue(batInput) > justRight || SensorValue(batInput) == tooFar){
-        motor[speedMotorR] = -movingSpeed+6;
-        motor[speedMotorL] = movingSpeed;
-    }
-    halt();
 }
 
 // a function to make the robot move backwards
@@ -145,36 +161,6 @@ void goBack(){
         motor[speedMotorL] = -movingSpeed;
   }
   halt();
-}
-
-// A function that turns the robot to the left
-void goLeft(){
-		resetMotorEncoder(speedMotorL);
-    while(positionNumber() != 0 && getMotorEncoder(speedMotorL) >= -rotate){
-	    motor[speedMotorR] = -turningSpeed;
-	    motor[speedMotorL] = -turningSpeed;
-    }
-  	halt();
-}
-
-// A function that turns the robot to the right
-void goRight(){
-	resetMotorEncoder(speedMotorL);
-	while(positionNumber() != 0 && getMotorEncoder(speedMotorL) >= rotate){
-		motor[speedMotorR] = turningSpeed;
-		motor[speedMotorL] = turningSpeed;
-	}
-  halt();
-}
-
-// A function that opens the claw
-void drop(){
-	resetMotorEncoder(clawMotor);
-	button_pushed = false;
-	while(abs(getMotorEncoder(clawMotor)) <= openClawDistance){
-		motor[clawMotor] = -openClawSpeed;
-	}
-	claw = neutral;
 }
 
 
@@ -206,6 +192,7 @@ void connection(){
 			case(backup):
 				// turn off the motor before backing up
 				motor[clawMotor] = 0;
+				wait1Msec(2000);
 				// call the go back function to move backwards
 				goBack();
 				// set claw to neutral
@@ -218,11 +205,9 @@ void connection(){
 	//end of while loop
 }
 
-
-//A function that tells which LEDs to light up
 void lightLED(){
 		//set number to be the position number
-		number = positionNumber();
+		number = findPosition();
 		//Checks to see if the robot is facing the beacon but too far away
     if(SensorValue(batInput) > justRight && number == 0){
         SensorValue[tooFarLED] = LIGHT_ON;
@@ -234,7 +219,6 @@ void lightLED(){
         SensorValue[justRightLED] = LIGHT_ON;
         SensorValue[tooCloseLED] = LIGHT_OFF;
         SensorValue[tooFarLED] = LIGHT_OFF;
-        connection();
     }
     // Checks to see if the robot is facing the beacon and is too close to the beacon
     else if(SensorValue(batInput) < justRight && number == 0){
@@ -251,11 +235,52 @@ void lightLED(){
 
 }
 
+// Turning the motor on to go straight until it his a wall of the beacon
+void goStraight(){
+	resetMotorEncoder(speedMotorL);
+	while(SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar){
+        motor[speedMotorR] = -movingSpeed+6;
+        motor[speedMotorL] = movingSpeed;
+    }
+    halt();
+		if (SensorValue(batInput) < justRight && SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
+			lightLED();
+			goBack();
+		}
+    if ((SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD)){
+    	wait1Msec(2000);
+    	connection();
+    }
+}
+
+
+// A function that turns the robot to the left
+void goLeft(){
+		resetMotorEncoder(speedMotorL);
+    while(findPosition() != 0 && getMotorEncoder(speedMotorL) >= -rotate){
+	    motor[speedMotorR] = -turningSpeed;
+	    motor[speedMotorL] = -turningSpeed;
+    }
+  	halt();
+}
+
+// A function that turns the robot to the right
+void goRight(){
+	resetMotorEncoder(speedMotorL);
+	while(findPosition() != 0 && getMotorEncoder(speedMotorL) >= rotate){
+		motor[speedMotorR] = turningSpeed;
+		motor[speedMotorL] = turningSpeed;
+	}
+  halt();
+}
+
+
+
 
 task main()
 {
     // Start
-	button_pushed = false;
+		button_pushed = false;
     position = started;
     while (true){
     		monitorInput();
@@ -270,6 +295,7 @@ task main()
                 // When the button is pushed switch state
                 if ( button_pushed ) {
                     // If button pushed, change state
+                		position = stopped;
                     findPosition();
                     // Clear flag to indicate button processed.
                     //button_pushed = false;
@@ -290,14 +316,33 @@ task main()
                     lightLED();
                     goStraight();
                 }
-                if (positionNumber() == 0){
+                if (findPosition() == 0){
                 	lightLED();
-                	connection();
                 	position = started;
               	}
               	else{
                 	lightLED();
                 	findPosition();
+              }
+                break;
+              case(found):
+            		// When the robot if facing straight
+              while(SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar){
+                    lightLED();
+                    goStraight();
+              }
+              if (SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
+                	lightLED();
+                	position = started;
+              }
+              if (SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
+              		while(SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD && getMotorEncoder(speedMotorL) >= -50){
+              			turnLeft();
+              		}
+              		while(SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD && getMotorEncoder(speedMotorL) <= 50){
+              			turnRight();
+              		}
+              		position = found;
               }
                 break;
             case(right):
