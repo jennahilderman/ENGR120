@@ -1,5 +1,5 @@
 #pragma config(I2C_Usage, I2C1, i2cSensors)
-#pragma config(Sensor, dgtl1,  straightButton, sensorTouch)
+#pragma config(Sensor, dgtl4,  straightButton, sensorTouch)
 #pragma config(Sensor, dgtl2,  turnButton,     sensorTouch)
 #pragma config(Sensor, I2C_1,  movingI2C,      sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  clawI2C,        sensorQuadEncoderOnI2CPort,    , AutoAssign )
@@ -10,14 +10,14 @@
 
 // Part 1 is the movement part
 // Part 2 is to make the connection
-#define part 2
+#define part 1
 // Some constants
 const   int rotate = 106;
 const   int meterForward = 800;
 const		int retreat = -50;
 const   int movingSpeed = 30;
 const		int turningSpeed = 20;
-const		int openClawSpeed = 30;
+const		int openClawSpeed = -30;
 const		int openClawDistance = 40;
 
 // Booleon statements for each button
@@ -64,7 +64,7 @@ void halt(){
 void goStraight(){
 		resetMotorEncoder(speedMotorL);
 		while(getMotorEncoder(speedMotorL) <= meterForward){
-    motor[speedMotorR] = movingSpeed-6;
+    motor[speedMotorR] = -movingSpeed+6;
     motor[speedMotorL] = movingSpeed;
   }
   halt();
@@ -73,7 +73,7 @@ void goStraight(){
 void goBack(){
 		resetMotorEncoder(speedMotorL);
 		while(getMotorEncoder(speedMotorL) >= retreat){
-    motor[speedMotorR] = -movingSpeed+2;
+    motor[speedMotorR] = movingSpeed-2;
     motor[speedMotorL] = -movingSpeed;
   }
   halt();
@@ -94,7 +94,7 @@ void goLeft(){
 void goRight(){
 	resetMotorEncoder(speedMotorL);
 	while(getMotorEncoder(speedMotorL) <= rotate){
-		motor[speedMotorR] = -turningSpeed;
+		motor[speedMotorR] = turningSpeed;
 		motor[speedMotorL] = turningSpeed;
 	}
   halt();
