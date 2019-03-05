@@ -16,29 +16,29 @@
 
 //Some important constants
 // How far it should back up
-const				int retreat = -50;
+const		int retreat = -50;
 // How fast it should move forward
 const       int movingSpeed = 30;
 // How fast it should turn
-const				int turningSpeed = 20;
+const		int turningSpeed = 20;
 // How fast the claw should open
-const				int openClawSpeed = 30;
+const		int openClawSpeed = 30;
 // How far the claw should open
-const				int openClawDistance = 40;
+const		int openClawDistance = 40;
 // What the ultrasonic range finder reads when it isnt finding anything
 const       int tooFar = -1;
 // how far away the robot should be from the beacon to make the connection
 const       int justRight = 7;
-// The IR sensor threshold 
-const				int IR_SENSOR_THRESHOLD = 830;
+// The IR sensor threshold
+const		int IR_SENSOR_THRESHOLD = 830;
 // Set the LED to this to turn it off
 const       int LIGHT_OFF = 0;
 // Set the LED to this to turn it on
 const       int LIGHT_ON = 1;
 // The distance away from a wall to turn away from it
-const				int wallDistance = 35;
+const		int wallDistance = 35;
 // how far it should turn
-const		rotate = 100;
+const		int rotate = 100;
 
 //declaring button_pushed to be  boolean
 bool    button_pushed;
@@ -126,7 +126,7 @@ void goBack(){
 		//turn the left motor on
         motor[speedMotorL] = -movingSpeed;
   }
-  // stop the motor 
+  // stop the motor
   halt();
 }
 
@@ -243,11 +243,11 @@ void goLeft(){
 	motor[speedMotorL] = -turningSpeed;
 }
 
-// A function that turns the robot to the right 
+// A function that turns the robot to the right
 void goRight(){
 	// turn on the right motor
 	motor[speedMotorR] = turningSpeed;
-	// turn on the left motor 
+	// turn on the left motor
 	motor[speedMotorL] = turningSpeed;
 }
 
