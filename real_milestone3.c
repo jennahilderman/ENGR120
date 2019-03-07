@@ -2,11 +2,11 @@
 #pragma config(Sensor, in1,    infraFrontL,    sensorReflection)
 #pragma config(Sensor, in2,    infraBack,      sensorReflection)
 #pragma config(Sensor, in3,    infraFrontR,    sensorReflection)
-#pragma config(Sensor, dgtl4,  button, sensorTouch)
+#pragma config(Sensor, dgtl1,  tooFarLED,      sensorDigitalOut)
+#pragma config(Sensor, dgtl2,  justRightLED,   sensorDigitalOut)
+#pragma config(Sensor, dgtl3,  tooCloseLED,    sensorDigitalOut)
+#pragma config(Sensor, dgtl4,  button,         sensorTouch)
 #pragma config(Sensor, dgtl5,  batInput,       sensorSONAR_cm)
-#pragma config(Sensor, dgtl1,  tooFarLED,       sensorDigitalOut)
-#pragma config(Sensor, dgtl2,  justRightLED,       sensorDigitalOut)
-#pragma config(Sensor, dgtl3,  tooCloseLED,       sensorDigitalOut)
 #pragma config(Sensor, I2C_1,  movingI2C,      sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  clawI2C,        sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           speedMotorL,   tmotorVex393_HBridge, openLoop, encoderPort, I2C_1)
@@ -30,13 +30,13 @@ const       int tooFar = -1;
 // how far away the robot should be from the beacon to make the connection
 const       int justRight = 7;
 // The IR sensor threshold
-const		int IR_SENSOR_THRESHOLD = 830;
+const		int IR_SENSOR_THRESHOLD = 450;//830
 // Set the LED to this to turn it off
 const       int LIGHT_OFF = 0;
 // Set the LED to this to turn it on
 const       int LIGHT_ON = 1;
 // The distance away from a wall to turn away from it
-const		int wallDistance = 35;
+const		int wallDistance = 20;
 // how far it should turn
 const		int rotate = 100;
 
@@ -64,7 +64,6 @@ enum t_claw{
 // Initialize the enumerations
 t_position position;
 t_claw claw;
-int number;
 
 // Function to see if a button is pushed.
 void monitorInput(){
@@ -78,28 +77,40 @@ int findPosition(){
 	// If the front IR reading is in the IR sensor threshold
 	if ( SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD ){
 		// Set position to found
-		position = found;
+		if (position != started){
+			position = found;
+			return 0;
+		}
 		//return 0
 		return 0;
 	}
 	// If the back IR reading is in the IR sensor threshold
 	if ( SensorValue[infraBack] < IR_SENSOR_THRESHOLD ){
 		// Set position to backwards
+		if (position != started){
 		position = backwards;
+		return 1;
+	}
 		//return 1
 		return 1;
 	}
 	// If the front IR reading is out the IR sensor threshold and the back IR reading is out the IR sensor threshold but the ultrasonic range finder notices a wall
-	if ( SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD && SensorValue[infraBack] < IR_SENSOR_THRESHOLD && SensorValue[batInput] <= wallDistance ){
+	if ( SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && SensorValue[infraBack] > IR_SENSOR_THRESHOLD && SensorValue[batInput] <= wallDistance ){
 		//Set position to wall
+		if (position != started){
 		position = wall;
+		return 2;
+	}
 		//return 2
 		return 2;
 	}
 	// If the front IR reading is out the IR sensor threshold and the back IR reading is out the IR sensor threshold but the ultrasonic range finder does not notices a wall
-	if ( SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD && SensorValue[infraBack] < IR_SENSOR_THRESHOLD && (SensorValue[batInput] >= wallDistance || SensorValue[batInput] == tooFar)){
+	if ( SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && SensorValue[infraBack] > IR_SENSOR_THRESHOLD && (SensorValue[batInput] >= wallDistance || SensorValue[batInput] == tooFar)){
 		//Set position to straight
-		position = straight;
+		if (position != started){
+			position = straight;
+			return 3;
+		}
 		//return 3
 		return 3;
 	}
@@ -198,7 +209,7 @@ void lightLED(){
         SensorValue[tooCloseLED] = LIGHT_OFF;
     }
     // Checks to see if the robot is facing the beacon and is the proper distance away
-    else if(SensorValue(batInput) == justRight && number == 0){
+    else if(SensorValue(batInput) <= justRight && number == 0){
 		// turn the just right LED on
         SensorValue[justRightLED] = LIGHT_ON;
 		// turn the too close LED off
@@ -206,17 +217,6 @@ void lightLED(){
 		// turn the too far LED off
         SensorValue[tooFarLED] = LIGHT_OFF;
     }
-    // Checks to see if the robot is facing the beacon and is too close to the beacon
-    else if(SensorValue(batInput) < justRight && number == 0){
-		//Should never be here
-		// turn the too close LED on
-        SensorValue[tooCloseLED] = LIGHT_ON;
-		// turn the just right LED off
-        SensorValue[justRightLED] = LIGHT_OFF;
-		// turn the too far LED off
-        SensorValue[tooFarLED] = LIGHT_OFF;
-    }
-    // if none of the other
     else{
 		// turn the too close LED off
         SensorValue[tooCloseLED] = LIGHT_OFF;
@@ -282,6 +282,7 @@ task main()
                 		while(SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && getMotorEncoder(speedMotorL) < 400){
                 			// Turn the robot to the right
 							goRight();
+							lightLED();
                 		}
 						// Stop the motor
                 		halt();
@@ -316,7 +317,7 @@ task main()
             	// Reset the encoder
 				resetMotorEncoder(speedMotorL);
 				//While there there is no wall of beacon sensed
-            	while((SensorValue(batInput) >= wallDistance || SensorValue(batInput) == tooFar) || (SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD && SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar)) {
+            	while(SensorValue(batInput) >= wallDistance || SensorValue(batInput) == tooFar || SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD) {
                     //Check to see is an LED should turn on
 					lightLED();
 					//Go straight
@@ -330,14 +331,15 @@ task main()
 			//The found case
             case(found):
 				//While the beacon is too far away
-              	while(SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar || SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD ){
+              	while(SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar){
 					//Check to see if an LED should turn on (The too far LED should turn on)
                 	lightLED();
 					// go straight
             	    goStraight();
           		}
+          		halt();
 				// If the front IR sensor is still within the threshold
-          		if (SensorValue[infraFrontL] < IR_SENSOR_THRESHOLD){
+          		if (SensorValue(batInput) >= justRight){
 					//Check to see if an LED should turn on (The just right LED should turn on)
            	     	lightLED();
 					//Wait a few seconds
@@ -347,23 +349,8 @@ task main()
     				//Change the position back to started so that the robot can do it again
                 	position = started;
               	}
-				//If the front IR sensor is out of the threshold
-              	if (SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD){
-					//reset the encoder
-					resetMotorEncoder(speedMotorL);
-					// While the front IR sensor is not in the threshold and the encoder does not read more then -50
-              		while(SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && getMotorEncoder(speedMotorL) >= -50){
-						//turn left
-              			turnLeft();
-              		}
-					//If it doesnt find it it went too far while the front IR sensor is not within the thresholf and the encoder reads less then 50
-              		while(SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && getMotorEncoder(speedMotorL) <= 50){
-              			//turn right
-						turnRight();
-              		}
-					//find position
-              		findPosition();
-              	}
+              	findPosition();
+
 				// break out of the found case
                 break;
 
@@ -373,15 +360,17 @@ task main()
                 	lightLED();
 					//Backup a little
                 	goBack();
+                	wait1Msec(1000);
 					//go left
                 	resetMotorEncoder(speedMotorL);
 					// while the robot is not facing the beacon and only rotates up to the rotate constant
-    				while(findPosition() != 0 && getMotorEncoder(speedMotorL) >= -rotate){
+    				while(SensorValue[infraFrontL] > IR_SENSOR_THRESHOLD && getMotorEncoder(speedMotorL) >= -rotate){
 						//turn left
 						goLeft();
 					}
 					// turn off the motors
   					halt();
+  					wait1Msec(1000);
 					//find position
                 	findPosition();
 				// break out of the wall case
