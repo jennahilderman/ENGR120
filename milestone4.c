@@ -29,8 +29,6 @@ const		int openClawDistance = 40;
 const       int tooFar = -1;
 // how far away the robot should be from the beacon to make the connection
 const       int justRight = 7;
-// The IR sensor threshold
-const		int IR_SENSOR_THRESHOLD = 450;
 // Set the LED to this to turn it off
 const       int LIGHT_OFF = 0;
 // Set the LED to this to turn it on
@@ -327,8 +325,6 @@ task main()
             // The started case
             case(started):
                 // Stop the motor
-				monitorInput();
-				monitorLight();
                 halt();
                 // Reset the encoders
                 resetMotorEncoder(clawMotor);
@@ -356,8 +352,6 @@ task main()
 
 			//The stopped case
             case(stopped):
-				monitorInput();
-				monitorLight();
 				// stop the motor
             	halt();
             	// Reset the encoders
@@ -370,8 +364,6 @@ task main()
 
 			// The straight case
             case(straight):
-				monitorInput();
-				monitorLight();
             	// Reset the encoder
 				resetMotorEncoder(speedMotorL);
 				//While there there is no wall of beacon sensed
@@ -388,10 +380,10 @@ task main()
 
 			//The found case
             case(found):
-				monitorInput();
-				monitorLight();
 				//While the beacon is too far away
               	while((SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar) &&  (monitorLight() >= 200 && !left_pushed && !right_pushed)){
+					monitorInput();
+					monitorLight();
 					// go straight
             	    goStraight();
           		}
@@ -401,7 +393,7 @@ task main()
 				if (monitorLight() < 200 && (SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar )){
 					position = lost;
 				}
-				if (SensorValue(batInput) <= justRight){
+				if (SensorValue(batInput) <= justRight && monitorLight() >= 200){
 					//Wait a few seconds
                 	wait1Msec(1000);
 					//Make the connection
@@ -422,12 +414,12 @@ task main()
 					count = 0;
 					while (monitorLight() < 200){
 						//While the encoder is greater or equal to -50
-						while(getMotorEncoder(speedMotorL) >= -50-(20*count) && SensorValue[infraFront] > IR_SENSOR_THRESHOLD ){
+						while(getMotorEncoder(speedMotorL) >= -50-(20*count) && monitorLight() < 200 ){
 							//Go left
 							goLeft();
 						}
 						//Check to the right
-						while(getMotorEncoder(speedMotorL) <= 50+(20*count) && SensorValue[infraFront] > IR_SENSOR_THRESHOLD){
+						while(getMotorEncoder(speedMotorL) <= 50+(20*count) && monitorLight() < 200){
 							//Go right
 							goRight();
 						}
@@ -443,8 +435,6 @@ task main()
 
 				//The wall case
                 case(wall):
-					monitorInput();
-					monitorLight();
 					//Backup a little
                 	goBack();
                 	wait1Msec(1000);
