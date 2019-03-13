@@ -433,9 +433,9 @@ task main()
 					//Make the connection
 					connection();
     				//Change the position back to started so that the robot can do it again
-									button_pushed = false;
-									right_pushed = false;
-									left_pushed = false;
+					button_pushed = false;
+					right_pushed = false;
+					left_pushed = false;
                 	position = started;
 					break;
               	}
