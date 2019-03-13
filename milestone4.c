@@ -24,7 +24,7 @@ const		int turningSpeed = 20;
 // How fast the claw should open
 const		int openClawSpeed = 30;
 // How far the claw should open
-const		int openClawDistance = 40;
+const		int openClawDistance = 122;
 // What the ultrasonic range finder reads when it isnt finding anything
 const       int tooFar = -1;
 // how far away the robot should be from the beacon to make the connection
@@ -99,7 +99,7 @@ int monitorLight()
 	int lightLevel1 = SensorValue[infraFront];
 
 	// Check if 100 msecs have elapsed.
-	if ( time1[T1] > 200 )  {
+	if ( time1[T1] > 100 )  {
 
 		// 100 msecs have elapsed.  Compute delta of light level.
 		diffLevelIR1 = maxLevelIR1 - minLevelIR1;
@@ -183,17 +183,10 @@ void halt(){
 
 // function to reverse the robot
 void goBack(){
-	//reset the encoder
-	resetMotorEncoder(speedMotorL);
-	//while the encoder is greater then retreat so it only backs up a little
-	while(getMotorEncoder(speedMotorL) >= retreat){
-		// turn the right motor on and subtract 6 so the right and left go the same speed
-        motor[speedMotorR] = movingSpeed-6;
-		//turn the left motor on
-        motor[speedMotorL] = -movingSpeed;
-  }
-  // stop the motor
-  halt();
+	// turn the right motor on and subtract 6 so the right and left go the same speed
+    motor[speedMotorR] = movingSpeed-6;
+	//turn the left motor on
+    motor[speedMotorL] = -movingSpeed;
 }
 
 // function to drop the cable
@@ -219,11 +212,11 @@ void connection(){
 				// Turn the motor off
 				motor[clawMotor] = 0;
 				// If the straight button is pushed
-				if ( button_pushed ){
-					// Change to the open state
+				if(SensorValue[batInput] <= justRight){
 					claw = open;
 				}
 				// Break out of the switch statement.
+				findPosition();
 				break;
 			// Seccond case is the claw is opening.
 			case(open):
@@ -240,7 +233,26 @@ void connection(){
 				motor[clawMotor] = 0;
 				wait1Msec(2000);
 				// call the go back function to move backwards
-				goBack();
+				resetMotorEncoder(speedMotorL);
+				//while the encoder is greater then retreat so it only backs up a little
+				while(getMotorEncoder(speedMotorL) >= (5*retreat)){
+					goBack();
+  				}
+  				// stop the motor
+  				halt();
+				// turn the too close LED on
+				SensorValue[tooCloseLED] = LIGHT_ON;
+				// turn the just right LED on
+        		SensorValue[justRightLED] = LIGHT_ON;
+				// turn the too far LED on
+        		SensorValue[tooFarLED] = LIGHT_ON;
+				wait1Msec(5000);
+				//turn the too close LED off
+				SensorValue[tooCloseLED] = LIGHT_OFF;
+				// turn the just right LED off
+        		SensorValue[justRightLED] = LIGHT_OFF;
+				// turn the too far LED off
+        		SensorValue[tooFarLED] = LIGHT_OFF;
 				// set claw to neutral
 				claw = neutral;
 				// break out of the switch statement
@@ -329,6 +341,7 @@ task main()
                 // Reset the encoders
                 resetMotorEncoder(clawMotor);
                 resetMotorEncoder(speedMotorL);
+				monitorInput();
                 // When the button is pushed switch state
                 if ( button_pushed ) {
                     // If button pushed, change state
@@ -336,7 +349,6 @@ task main()
                 		while(monitorLight() < 200 && getMotorEncoder(speedMotorL) <= 400){
                 			// Turn the robot to the right
 							goRight();
-							lightLED();
                 		}
 						// Stop the motor
                 		halt();
@@ -390,8 +402,17 @@ task main()
           		halt();
 				resetMotorEncoder(speedMotorL);
 				// If the front IR sensor is still within the threshold
+				if(left_pushed){
+					findPosition();
+					break;
+				}
+				if(right_pushed){
+					findPosition();
+					break;
+				}
 				if (monitorLight() < 200 && (SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar )){
 					position = lost;
+					break;
 				}
 				if (SensorValue(batInput) <= justRight && monitorLight() >= 200){
 					//Wait a few seconds
@@ -400,7 +421,9 @@ task main()
 					connection();
     				//Change the position back to started so that the robot can do it again
                 	position = started;
+					break;
               	}
+				findPosition();
 				// break out of the found case
                 break;
 
@@ -436,7 +459,11 @@ task main()
 				//The wall case
                 case(wall):
 					//Backup a little
-                	goBack();
+                	while(getMotorEncoder(speedMotorL) >= retreat){
+						goBack();
+  					}
+  					// stop the motor
+  					halt();
                 	wait1Msec(1000);
 					//go left
                 	resetMotorEncoder(speedMotorL);
@@ -459,7 +486,11 @@ task main()
 					monitorInput();
 					monitorLight();
 					//Backup a little
-                	goBack();
+                	while(getMotorEncoder(speedMotorL) >= retreat){
+						goBack();
+  					}
+  					// stop the motor
+  					halt();
                 	wait1Msec(1000);
 					//go left
                 	resetMotorEncoder(speedMotorL);
