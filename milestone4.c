@@ -66,6 +66,7 @@ enum t_claw{
 t_position position;
 t_claw claw;
 int count;
+int done;
 
 
 // Function to see if a button is pushed.
@@ -216,12 +217,14 @@ void connection(){
 					claw = open;
 				}
 				// Break out of the switch statement.
-				findPosition();
+				else{
+					done = 1;
+					button_pushed = false;
+					position = started;
+				}
 				break;
 			// Seccond case is the claw is opening.
 			case(open):
-				// Clear flag to indicate button processed
-				button_pushed = false;
 				// Call the drop function to open the claw
 				drop();
 				// Change to the neutral state.
@@ -254,9 +257,17 @@ void connection(){
 				// turn the too far LED off
         		SensorValue[tooFarLED] = LIGHT_OFF;
 				// set claw to neutral
+				while(getMotorEncoder(clawMotor) > 0){
+					motor[clawMotor] = openClawSpeed;
+				}
+				motor[clawMotor] = 0;
 				claw = neutral;
 				// break out of the switch statement
 				break;
+		}
+		if(done == 1){
+			done = 0;
+			break;
 		}
 		//end of switch statement
 	}
@@ -420,6 +431,9 @@ task main()
 					//Make the connection
 					connection();
     				//Change the position back to started so that the robot can do it again
+									button_pushed = false;
+									right_pushed = false;
+									left_pushed = false;
                 	position = started;
 					break;
               	}
@@ -437,12 +451,12 @@ task main()
 					count = 0;
 					while (monitorLight() < 200){
 						//While the encoder is greater or equal to -50
-						while(getMotorEncoder(speedMotorL) >= -50-(20*count) && monitorLight() < 200 ){
+						while(getMotorEncoder(speedMotorL) >= -30-(20*count) && monitorLight() < 200 ){
 							//Go left
 							goLeft();
 						}
 						//Check to the right
-						while(getMotorEncoder(speedMotorL) <= 50+(20*count) && monitorLight() < 200){
+						while(getMotorEncoder(speedMotorL) <= 30+(20*count) && monitorLight() < 200){
 							//Go right
 							goRight();
 						}
