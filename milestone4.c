@@ -6,7 +6,7 @@
 #pragma config(Sensor, dgtl7,  button,         sensorTouch)
 #pragma config(Sensor, dgtl8,  switchRight,    sensorTouch)
 #pragma config(Sensor, dgtl9,  switchLeft,     sensorTouch)
-#pragma config(Sensor, dgtl11, batInput,       sensorSONAR_cm)
+#pragma config(Sensor, dgtl11, batInput,       sensorSONAR_mm)
 #pragma config(Sensor, I2C_1,  movingI2C,      sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Sensor, I2C_2,  clawI2C,        sensorQuadEncoderOnI2CPort,    , AutoAssign )
 #pragma config(Motor,  port1,           speedMotorL,   tmotorVex393_HBridge, openLoop, encoderPort, I2C_1)
@@ -24,21 +24,23 @@ const		int turningSpeed = 20;
 // How fast the claw should open
 const		int openClawSpeed = 30;
 // How far the claw should open
-const		int openClawDistance = 122;
+const		int openClawDistance = 215;
 // What the ultrasonic range finder reads when it isnt finding anything
 const       int tooFar = -1;
 // how far away the robot should be from the beacon to make the connection
-const       int justRight = 7;
+const       int justRight = 75;
 // Set the LED to this to turn it off
 const       int LIGHT_OFF = 0;
 // Set the LED to this to turn it on
 const       int LIGHT_ON = 1;
 // The distance away from a wall to turn away from it
-const		int wallDistance = 20;
+const		int wallDistance = 200;
 // how far it should turn
 const		int rotate = 100;
 // IR difference
 const		int difference = 400;
+
+const		int speedDifference = movingSpeed/5;
 
 //declaring button_pushed to be  boolean
 bool    button_pushed;
@@ -187,7 +189,7 @@ void halt(){
 // function to reverse the robot
 void goBack(){
 	// turn the right motor on and subtract 6 so the right and left go the same speed
-    motor[speedMotorR] = movingSpeed-6;
+    motor[speedMotorR] = movingSpeed-speedDifference;
 	//turn the left motor on
     motor[speedMotorL] = -movingSpeed;
 }
@@ -308,7 +310,7 @@ void lightLED(){
 // A function that starts the motor on to go straight
 void goStraight(){
 	// turn right motor on +6 to make the right and  left go the same speed
-    motor[speedMotorR] = -movingSpeed+6;
+    motor[speedMotorR] = -movingSpeed+speedDifference;
 	// turn left motor on
     motor[speedMotorL] = movingSpeed;
 }
@@ -415,12 +417,44 @@ task main()
           		halt();
 				resetMotorEncoder(speedMotorL);
 				// If the front IR sensor is still within the threshold
-				if(left_pushed){
-					findPosition();
+				if(left_pushed && monitorLight() >= difference){
+					resetMotorEncoder(speedMotorL);
+                	while(getMotorEncoder(speedMotorL) >= retreat){
+						goBack();
+  					}
+  					// stop the motor
+  					halt();
+                	wait1Msec(1000);
+					//go left
+                	resetMotorEncoder(speedMotorL);
+					// while the robot is not facing the beacon and only rotates up to the rotate constant
+    				while(getMotorEncoder(speedMotorL) >= -rotate/3){
+						//turn left
+						goLeft();
+					}
+					left_pushed = false;
+					right_pushed = false;
+					position = lost;
 					break;
 				}
-				if(right_pushed){
-					findPosition();
+				if(right_pushed && monitorLight() >= difference){
+					resetMotorEncoder(speedMotorL);
+                	while(getMotorEncoder(speedMotorL) >= retreat){
+						goBack();
+  					}
+  					// stop the motor
+  					halt();
+                	wait1Msec(1000);
+					//go left
+                	resetMotorEncoder(speedMotorL);
+					// while the robot is not facing the beacon and only rotates up to the rotate constant
+    				while(getMotorEncoder(speedMotorL) <= rotate/3){
+						//turn left
+						goRight();
+					}
+					left_pushed = false;
+					right_pushed = false;
+					position = lost;
 					break;
 				}
 				if (monitorLight() < difference && (SensorValue(batInput) >= justRight || SensorValue(batInput) == tooFar )){
@@ -475,6 +509,7 @@ task main()
 				//The wall case
                 case(wall):
 					//Backup a little
+					resetMotorEncoder(speedMotorL);
                 	while(getMotorEncoder(speedMotorL) >= retreat){
 						goBack();
   					}
@@ -493,6 +528,7 @@ task main()
   					wait1Msec(1000);
 					//find position
   					right_pushed = false;
+  					left_pushed = false;
                 	findPosition();
 				// break out of the wall case
                 break;
@@ -502,6 +538,7 @@ task main()
 					monitorInput();
 					monitorLight();
 					//Backup a little
+					resetMotorEncoder(speedMotorL);
                 	while(getMotorEncoder(speedMotorL) >= retreat){
 						goBack();
   					}
@@ -516,6 +553,7 @@ task main()
 						goRight();
 					}
 					left_pushed = false;
+					right_pushed = false;
 					// turn off the motors
   					halt();
   					wait1Msec(1000);
