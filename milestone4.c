@@ -41,7 +41,7 @@ const		int rotate = 100;
 // IR difference
 const		int difference = 400;
 
-const		int speedDifference = movingSpeed/5;
+const		int speedDifference = movingSpeed/6;
 
 
 //declaring button_pushed to be  boolean
@@ -307,6 +307,11 @@ void connection(){
         		SensorValue[justRightLED] = LIGHT_ON;
 				// turn the too far LED on
         		SensorValue[tooFarLED] = LIGHT_ON;
+				wait1Msec(1000);
+				while(getMotorEncoder(clawMotor) > 0){
+					motor[clawMotor] = openClawSpeed;
+				}
+				motor[clawMotor] = 0;
 				wait1Msec(5000);
 				//turn the too close LED off
 				SensorValue[tooCloseLED] = LIGHT_OFF;
@@ -392,9 +397,9 @@ task main()
                 if ( button_pushed ) {
                     // If button pushed, change state
 						// While the IR sensors are not sencing anything and the encoder is less then 400
-                		while(monitorLight() < difference && getMotorEncoder(speedMotorL) <= 400){
+                		while(monitorLight() < difference && getMotorEncoder(speedMotorL) >= -400){
                 			// Turn the robot to the right
-							goRight();
+							goLeft();
                 		}
 						// Stop the motor
                 		halt();
@@ -465,7 +470,7 @@ task main()
 					//go left
                 	resetMotorEncoder(speedMotorL);
 					// while the robot is not facing the beacon and only rotates up to the rotate constant
-    				while(getMotorEncoder(speedMotorL) >= -rotate/4){
+    				while(getMotorEncoder(speedMotorL) >= -rotate/5){
 						//turn left
 						goLeft();
 					}
@@ -485,7 +490,7 @@ task main()
 					//go left
                 	resetMotorEncoder(speedMotorL);
 					// while the robot is not facing the beacon and only rotates up to the rotate constant
-    				while(getMotorEncoder(speedMotorL) <= rotate/4){
+    				while(getMotorEncoder(speedMotorL) <= rotate/5){
 						//turn left
 						goRight();
 					}
