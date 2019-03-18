@@ -39,7 +39,7 @@ const		int wallDistance = 200;
 // how far it should turn
 const		int rotate = 100;
 // IR difference
-const		int difference = 400;
+const		int difference = 200;
 
 const		int speedDifference = movingSpeed/6;
 
