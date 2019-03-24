@@ -40,7 +40,7 @@ const		int wallDistance = 200;
 // how far it should turn
 const		int rotate = 100;
 // IR difference
-const		int difference = 200;
+const		int difference = 300;
 // the speed difference between motors
 const		int speedDifference = movingSpeed/6;
 
